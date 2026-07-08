@@ -5,7 +5,7 @@
 ![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)
 ![MIT](https://img.shields.io/badge/license-MIT-green)
 
-A [MyThingsLab](../mythings-core) `My[X]` tool: curate a `TODO.md` from live
+A [MyThingsLab](../my-things-core) `My[X]` tool: curate a `TODO.md` from live
 signals — a repo's **open GitHub issues** plus **MyPlanner's** latest plan — and
 open a PR. It's the prospective counterpart to MyReporter's retrospective digest:
 a durable, checked-in "what to do next", grouped **Now / Next / Later**.
@@ -41,7 +41,7 @@ mutates issues. Re-running with no changes is a no-op (`skipped`).
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
-pip install -e ../mythings-core -e ".[dev]"
+pip install -e ../my-things-core -e ".[dev]"
 pytest
 ```
 
