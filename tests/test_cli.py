@@ -31,3 +31,7 @@ def test_explicit_plan_ledger_wins(tmp_path: Path) -> None:
 def test_missing_subcommand_errors() -> None:
     with pytest.raises(SystemExit):
         main([])
+
+
+def test_noop_placeholder() -> None:
+    assert True
