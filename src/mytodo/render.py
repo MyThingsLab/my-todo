@@ -4,7 +4,7 @@ from mytodo.plan import PlanSignal
 from mytodo.sources import TodoItem
 
 # Deterministic fallback grouping, by label, when no engine override is given.
-_NOW_LABELS = {"safety", "bug"}
+_NOW_LABELS = {"safety", "bug", "critical"}
 _NEXT_LABELS = {"core-contract", "needs-decision"}
 _SECTIONS = ("Now", "Next", "Later")
 
@@ -21,7 +21,8 @@ def _section_of(item: TodoItem) -> str:
 def _line(item: TodoItem, *, with_repo: bool) -> str:
     ref = f"{item.repo}#{item.number}" if with_repo and item.repo else f"#{item.number}"
     tags = "".join(f" `{lbl}`" for lbl in item.labels)
-    return f"- [ ] {ref} {item.title}{tags}"
+    prefix = "⚠ " if "critical" in item.labels else ""
+    return f"- [ ] {prefix}{ref} {item.title}{tags}"
 
 
 def render_todo(

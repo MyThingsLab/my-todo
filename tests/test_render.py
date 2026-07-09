@@ -52,3 +52,12 @@ def test_engine_override_wins_over_labels() -> None:
 def test_no_issues_message() -> None:
     out = render_todo([], PlanSignal(), scope="o/r")
     assert "No open issues" in out
+
+
+def test_critical_label_sorts_now_with_warning_prefix() -> None:
+    items = [_item(9, "fleet-halting bug", ("critical", "bug"))]
+    out = render_todo(items, PlanSignal(), scope="o/r")
+
+    now = out.index("## Now")
+    assert "- [ ] ⚠ #9 fleet-halting bug" in out
+    assert out.index("#9") > now
