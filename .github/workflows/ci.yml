@@ -32,7 +32,7 @@ jobs:
       - name: Ruff
         run: ruff check src tests
       - name: Tests
-        run: pytest --cov=mytemplate --cov-report=xml
+        run: pytest --cov=mytodo --cov-report=xml
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
