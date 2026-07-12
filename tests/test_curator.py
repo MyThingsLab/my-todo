@@ -6,7 +6,7 @@ from pathlib import Path
 from mythings.github import GitHub, Issue
 from mythings.ledger import Ledger
 
-from conftest import FakeGh, FakeSearch, issue, make_target_repo, org_hit
+from conftest import fake_gh, fake_search, issue, make_target_repo, org_hit
 from mytodo.curator import Curator
 from mytodo.plan import PlanSignal
 from mytodo.render import render_todo
@@ -22,7 +22,7 @@ def _show(repo: Path, ref: str) -> str:
 
 def test_curate_repo_writes_todo_and_opens_pr(tmp_path: Path) -> None:
     repo = make_target_repo(tmp_path)
-    fake = FakeGh(
+    fake = fake_gh(
         [issue(6, "vuln scanning", ("safety",)), issue(11, "MySearcher", ("tool-build",))]
     )
     ledger = Ledger(tmp_path / "led.jsonl")
@@ -59,7 +59,7 @@ def test_curate_skipped_when_todo_unchanged(tmp_path: Path) -> None:
     subprocess.run(["git", "-C", str(repo), "commit", "-q", "-m", "seed todo"], check=True)
     subprocess.run(["git", "-C", str(repo), "push", "-q", "origin", "main"], check=True)
 
-    fake = FakeGh([issue(6, "vuln scanning", ("safety",))])
+    fake = fake_gh([issue(6, "vuln scanning", ("safety",))])
     curator = Curator(
         source=repo,
         target_repo="o/r",
@@ -76,7 +76,7 @@ def test_curate_skipped_when_todo_unchanged(tmp_path: Path) -> None:
 
 def test_curate_org_rolls_up_with_repo_prefixes(tmp_path: Path) -> None:
     into = make_target_repo(tmp_path)
-    search = FakeSearch(
+    search = fake_search(
         [
             org_hit("my-things-core", 35, "add diff()", ("core-contract",)),
             org_hit("fleet-dispatch", 6, "vuln scanning", ("safety",)),
@@ -86,7 +86,7 @@ def test_curate_org_rolls_up_with_repo_prefixes(tmp_path: Path) -> None:
         source=into,
         target_repo="MyThingsLab/fleet-dispatch",
         ledger=Ledger(tmp_path / "led.jsonl"),
-        github=GitHub("MyThingsLab/fleet-dispatch", runner=FakeGh([])),
+        github=GitHub("MyThingsLab/fleet-dispatch", runner=fake_gh([])),
         plan_ledger=None,
         runner=search,
     )
@@ -103,7 +103,7 @@ def test_curate_org_rolls_up_with_repo_prefixes(tmp_path: Path) -> None:
 
 def test_no_pr_writes_but_skips_pr(tmp_path: Path) -> None:
     repo = make_target_repo(tmp_path)
-    fake = FakeGh([issue(6, "vuln", ("safety",))])
+    fake = fake_gh([issue(6, "vuln", ("safety",))])
     curator = Curator(
         source=repo,
         target_repo="o/r",
