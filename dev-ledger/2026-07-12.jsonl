@@ -1,0 +1,1 @@
+{"data":{"files":"tests/","session":"2026-07-12"},"detail":"Mechanical migration to mythings.testing: local FakeGh/FakeSearch became fake_gh/fake_search wiring over the shared FakeGh; the empty-tree make_target_repo stays local by design (first run must create TODO.md in a fileless repo).","kind":"build","outcome":"success","tool":"claude-code","ts":"2026-07-12T10:11:05Z"}

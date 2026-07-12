@@ -6,14 +6,17 @@ from pathlib import Path
 
 import pytest
 
+# Shared fakes come from mythings.testing (plain imports; aliased fixture
+# re-export + getfixturevalue wrapper per core docs/CONVENTIONS.md).
+from mythings.testing import FakeGh as _FakeGh
+from mythings.testing import clean_git_env as _shared_clean_git_env  # noqa: F401
+
 
 @pytest.fixture(autouse=True)
-def _clean_git_env(monkeypatch: pytest.MonkeyPatch) -> None:
-    # pre-commit runs hooks with GIT_DIR/GIT_INDEX_FILE set; they leak into the
-    # git subprocesses these tests spawn (and into isolation.Workspace) and break
-    # worktree ops on the throwaway repo. Real my-todo runs aren't inside a hook.
-    for var in ("GIT_DIR", "GIT_INDEX_FILE", "GIT_WORK_TREE", "GIT_OBJECT_DIRECTORY"):
-        monkeypatch.delenv(var, raising=False)
+def _clean_git_env(request: pytest.FixtureRequest) -> None:
+    # Real git worktrees in every test; hook-launched pytest (pre-commit)
+    # must not leak GIT_* into them.
+    request.getfixturevalue("_shared_clean_git_env")
 
 
 def git(repo: Path, *argv: str) -> None:
@@ -21,6 +24,8 @@ def git(repo: Path, *argv: str) -> None:
 
 
 def make_target_repo(tmp_path: Path) -> Path:
+    # Deliberately an EMPTY tree (--allow-empty), not the shared make_git_repo:
+    # my-todo's first run must create TODO.md in a repo with no files at all.
     origin = tmp_path / "origin.git"
     subprocess.run(["git", "init", "--bare", str(origin)], check=True, capture_output=True)
     repo = tmp_path / "work"
@@ -44,29 +49,18 @@ def issue(number: int, title: str, labels: tuple[str, ...] = ()) -> dict:
     }
 
 
-class FakeGh:
-    # Mocks the `gh` boundary for GitHub: serves `issue list` and `pr create`.
-    def __init__(self, issues: list[dict] | None = None) -> None:
-        self.issues = issues or []
-        self.calls: list[list[str]] = []
-
-    def __call__(self, argv: list[str]) -> str:
-        self.calls.append(argv)
-        if argv[:2] == ["issue", "list"]:
-            return json.dumps(self.issues)
-        if argv[:2] == ["pr", "create"]:
-            return "https://github.com/owner/name/pull/7\n"
-        raise AssertionError(f"unexpected gh call: {argv}")
+def fake_gh(issues: list[dict] | None = None) -> _FakeGh:
+    return _FakeGh(
+        {
+            ("issue", "list"): json.dumps(issues or []),
+            ("pr", "create"): "https://github.com/owner/name/pull/7\n",
+        }
+    )
 
 
-class FakeSearch:
-    # Mocks the `gh search issues` boundary for org mode.
-    def __init__(self, results: list[dict]) -> None:
-        self.results = results
-
-    def __call__(self, argv: list[str]) -> str:
-        assert argv[:2] == ["search", "issues"], argv
-        return json.dumps(self.results)
+def fake_search(results: list[dict]) -> _FakeGh:
+    # Org mode's only gh call is `search issues`; anything else raises.
+    return _FakeGh({("search", "issues"): json.dumps(results)})
 
 
 def org_hit(repo: str, number: int, title: str, labels: tuple[str, ...] = ()) -> dict:
