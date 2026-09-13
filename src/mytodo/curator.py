@@ -8,7 +8,8 @@ from mythings.engine import Engine
 from mythings.github import GitHub, PullRequest
 from mythings.isolation import Workspace, in_github_actions
 from mythings.ledger import Ledger
-from mythings.policy import ALLOW, Action, Decision, Policy, PolicyResult
+from mythings.policy import Action, Decision, Policy
+from mythings.tool import DefaultPolicy
 
 from mytodo.plan import read_plan
 from mytodo.prioritize import engine_sections
@@ -16,11 +17,6 @@ from mytodo.render import render_todo
 from mytodo.sources import Runner, gh, issues_to_items, search_org_open_issues
 
 _TODO = "TODO.md"
-
-
-class _AllowPolicy:
-    def evaluate(self, action: Action) -> PolicyResult:
-        return ALLOW
 
 
 class PolicyDenied(RuntimeError):
@@ -57,7 +53,7 @@ class Curator:
         self.base = base
         self.plan_ledger = plan_ledger
         self.engine = engine
-        self.policy: Policy = policy or _AllowPolicy()
+        self.policy: Policy = policy or DefaultPolicy()
         self.runner = runner
 
     def curate(self, *, org: str | None = None, open_pr: bool = True) -> Result:
